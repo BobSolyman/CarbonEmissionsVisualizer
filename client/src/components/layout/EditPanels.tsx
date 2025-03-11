@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Tabs, Tab } from "@mui/material";
-import NodeEditPanel from "./panels/NodeEditPanel";
-import EdgeEditPanel from "./panels/EdgeEditPanel";
-import AddNodePanel from "./panels/AddNodePanel";
-import { useGraphStore } from "../stores/useGraphStore";
+import NodeEditPanel from "../panels/NodeEditPanel";
+import EdgeEditPanel from "../panels/EdgeEditPanel";
+import AddNodePanel from "../panels/AddNodePanel";
+import { useGraphStore } from "../../stores/useGraphStore";
 
 const EditPanels = () => {
   const { selectedNode, selectedEdge } = useGraphStore();

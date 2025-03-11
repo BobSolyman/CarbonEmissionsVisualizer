@@ -8,10 +8,10 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useGraphStore } from "../stores/useGraphStore";
-import CustomNode from "./CustomNode";
-import CustomEdge from "./CustomEdge";
-import CyberPrompt from "./shared/CyberPrompt";
+import { useGraphStore } from "../../stores/useGraphStore";
+import CustomNode from "../graph/CustomNode";
+import CustomEdge from "../graph/CustomEdge";
+import CyberPrompt from "../shared/CyberPrompt";
 
 const edgeTypes = {
   custom: CustomEdge,
@@ -23,7 +23,6 @@ const nodeTypes = {
 
 const GraphCanvas = () => {
   const { nodes, edges, actions } = useGraphStore();
-  const { addEdges } = useReactFlow();
   const [promptOpen, setPromptOpen] = useState(false);
   const [pendingConnection, setPendingConnection] = useState<any>(null);
 
@@ -50,12 +49,12 @@ const GraphCanvas = () => {
 
   const onEdgeClick = (event: any, edge: any) => {
     actions.setSelectedNode(null);
-    actions.setSelectedEdge(edge.id); // Select the clicked edge
+    actions.setSelectedEdge(edge.id);
   };
 
   const onNodeClick = (event: any, node: any) => {
     actions.setSelectedEdge(null);
-    actions.setSelectedNode(node.id); // Update selected node in the store
+    actions.setSelectedNode(node.id);
   };
 
   const onPaneClick = () => {
@@ -98,7 +97,7 @@ const GraphCanvas = () => {
         });
       }}
       connectionMode={ConnectionMode.Loose}
-      fitView // Automatically fits the view to the graph
+      fitView
     >
       <Background />
       <MiniMap

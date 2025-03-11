@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, TextField } from "@mui/material";
-import { useGraphStore } from "../stores/useGraphStore";
+import { useGraphStore } from "../../stores/useGraphStore";
 
 const Header = () => {
   const { name, actions } = useGraphStore();

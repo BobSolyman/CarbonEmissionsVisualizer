@@ -1,9 +1,9 @@
-import GraphCanvas from "@components/GraphCanvas";
+import GraphCanvas from "@components/layout/GraphCanvas";
 import { Box, Paper, Stack, Divider } from "@mui/material";
 import LoadGraphPanel from "@components/panels/LoadGraphPanel";
 import SaveGraphPanel from "@components/panels/SaveGraphPanel";
-import Header from "@components/Header";
-import EditPanels from "@components/EditPanels";
+import Header from "@components/layout/Header";
+import EditPanels from "@components/layout/EditPanels";
 import CyberAlert from "@components/shared/CyberAlert";
 import { useDialogStore } from "./stores/useDialogStore";
 

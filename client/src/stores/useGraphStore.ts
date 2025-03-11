@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { useDialogStore } from "./useDialogStore";
 
-type Node = {
+export type Node = {
   id: string;
   name: string;
   weight: number;
@@ -9,7 +9,7 @@ type Node = {
   position: { x: number; y: number };
 };
 
-type Edge = {
+export type Edge = {
   id: string;
   source: string;
   target: string;

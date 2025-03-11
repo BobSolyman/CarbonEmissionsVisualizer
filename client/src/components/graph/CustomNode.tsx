@@ -1,5 +1,5 @@
 import { Handle, Position } from "@xyflow/react";
-import { useGraphStore } from "../stores/useGraphStore";
+import { useGraphStore } from "../../stores/useGraphStore";
 import { Box, Typography, LinearProgress } from "@mui/material";
 
 type CustomNodeProps = {
