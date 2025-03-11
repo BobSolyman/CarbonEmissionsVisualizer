@@ -1,4 +1,3 @@
-import React from "react";
 import CyberDialog from "./CyberDialog";
 import CyberButton from "./CyberButton";
 

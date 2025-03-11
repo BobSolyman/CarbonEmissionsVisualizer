@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useGraphStore } from "../../stores/useGraphStore";
 import { Box, Stack, Typography } from "@mui/material";
 import CyberButton from "../shared/CyberButton";
-import axios from "axios";
 import CyberConfirm from "../shared/CyberConfirm";
 import { useDialogStore } from "../../stores/useDialogStore";
+import { graphService } from "../../services";
 
 const SaveGraphPanel = () => {
   const { id, name, nodes, edges, actions } = useGraphStore();
@@ -17,21 +17,20 @@ const SaveGraphPanel = () => {
   const handleSaveOrUpdateGraph = async () => {
     setLoading(true);
     try {
-      const response = id
-        ? await axios.put(`http://localhost:5000/api/graph/update/${id}`, {
+      const result = id
+        ? await graphService.updateGraph(id, {
             name,
             nodes,
             edges,
           })
-        : await axios.post("http://localhost:5000/api/graph/save", {
+        : await graphService.saveGraph({
             name,
             nodes,
             edges,
           });
 
-      const result = response.data;
       actions.setGraphName(result.name);
-      actions.setGraphId(result.id);
+      actions.setGraphId(result._id);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
@@ -54,7 +53,7 @@ const SaveGraphPanel = () => {
   const handleConfirmClear = async () => {
     try {
       if (id) {
-        await axios.delete(`http://localhost:5000/api/graph/delete/${id}`);
+        await graphService.deleteGraph(id);
       }
 
       actions.setGraphId("");

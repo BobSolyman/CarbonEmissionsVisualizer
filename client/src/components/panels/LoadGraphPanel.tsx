@@ -9,7 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import CyberButton from "../shared/CyberButton";
-import axios from "axios";
+import { graphService } from "../../services";
 
 type GraphData = {
   _id: string;
@@ -29,8 +29,8 @@ const LoadGraphPanel = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("http://localhost:5000/api/graph/list");
-      setGraphs(response.data);
+      const response = await graphService.loadGraphs();
+      setGraphs(response);
     } catch (error) {
       console.error("Error fetching graphs:", error);
       setError("Failed to load graphs. Please try again.");
@@ -52,10 +52,7 @@ const LoadGraphPanel = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/graph/load/${selectedGraphId}`
-      );
-      const graphData = response.data;
+      const graphData = await graphService.loadGraph(selectedGraphId);
       actions.setGraphId(graphData._id);
       actions.setGraphName(graphData.name);
       actions.setNodes(graphData.nodes);
