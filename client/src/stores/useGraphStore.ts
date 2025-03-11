@@ -1,44 +1,7 @@
 import { create } from "zustand";
 import { useDialogStore } from "./useDialogStore";
-
-export type Node = {
-  id: string;
-  name: string;
-  weight: number;
-  emissions: number;
-  position: { x: number; y: number };
-};
-
-export type Edge = {
-  id: string;
-  source: string;
-  target: string;
-  weight: number;
-  emissions: number;
-};
-
-export type GraphStore = {
-  id: string;
-  name: string;
-  nodes: Node[];
-  edges: Edge[];
-  selectedNode: string | null;
-  selectedEdge: string | null;
-  actions: {
-    setGraphName: (name: string) => void;
-    addNode: (node: Node) => void;
-    updateNode: (id: string, props: Partial<Node>) => void;
-    deleteNode: (id: string) => void;
-    addEdge: (edge: Edge) => void;
-    updateEdge: (id: string, props: Partial<Edge>) => void;
-    deleteEdge: (id: string) => void;
-    setSelectedNode: (id: string | null) => void;
-    setSelectedEdge: (id: string | null) => void;
-    setGraphId: (id: string) => void;
-    setNodes: (nodes: Node[]) => void;
-    setEdges: (edges: Edge[]) => void;
-  };
-};
+import { GraphStore, Edge, Node } from "./types";
+import { hasCycle, updateDownstreamNodes } from "./helpers";
 
 export const useGraphStore = create<GraphStore>((set, get) => ({
   id: "",
@@ -54,44 +17,6 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
     // Delete a node and its associated edges
     deleteNode: (id) =>
       set((state) => {
-        // Helper function to recursively update downstream nodes and edges
-        const updateDownstreamNodes = (
-          nodeId: string,
-          emissionsDelta: number,
-          updatedNodesMap: Map<string, Node>,
-          updatedEdgesMap: Map<string, Edge>
-        ) => {
-          const node =
-            updatedNodesMap.get(nodeId) ||
-            state.nodes.find((n) => n.id === nodeId)!;
-          const updatedNode = {
-            ...node,
-            emissions: node.emissions + emissionsDelta,
-          };
-          updatedNodesMap.set(nodeId, updatedNode);
-
-          // Find all outgoing edges from this node
-          const outgoingEdges = state.edges.filter((e) => e.source === nodeId);
-          outgoingEdges.forEach((outEdge) => {
-            // FIXED FORMULA: node's weight / edge weight * node's emissions
-            const newEdgeEmissions =
-              (updatedNode.weight / outEdge.weight) * updatedNode.emissions;
-            const updatedEdge = {
-              ...outEdge,
-              emissions: newEdgeEmissions,
-            };
-            updatedEdgesMap.set(outEdge.id, updatedEdge);
-
-            // Continue updating downstream nodes
-            updateDownstreamNodes(
-              outEdge.target,
-              newEdgeEmissions - outEdge.emissions,
-              updatedNodesMap,
-              updatedEdgesMap
-            );
-          });
-        };
-
         // Find all outgoing edges from the node being deleted
         const outgoingEdges = state.edges.filter((e) => e.source === id);
 
@@ -105,7 +30,8 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
             edge.target,
             -edge.emissions, // Negative emissions since we're removing the edge
             updatedNodesMap,
-            updatedEdgesMap
+            updatedEdgesMap,
+            state
           );
         });
 
@@ -129,35 +55,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
         const sourceNode = state.nodes.find((n) => n.id === edge.source)!;
         const targetNode = state.nodes.find((n) => n.id === edge.target)!;
 
-        // Check for cycles using DFS starting from the target node
-        const hasCycle = (() => {
-          const visited = new Set<string>();
-          const stack = new Set<string>();
-
-          const dfs = (nodeId: string): boolean => {
-            if (nodeId === edge.source) return true; // Would create a cycle
-            if (stack.has(nodeId)) return false;
-            if (visited.has(nodeId)) return false;
-
-            visited.add(nodeId);
-            stack.add(nodeId);
-
-            const outgoingEdges = state.edges.filter(
-              (e) => e.source === nodeId
-            );
-            for (const outEdge of outgoingEdges) {
-              if (dfs(outEdge.target)) return true;
-            }
-
-            stack.delete(nodeId);
-            return false;
-          };
-
-          // Start DFS from the target node
-          return dfs(edge.target);
-        })();
-
-        if (hasCycle) {
+        if (hasCycle(edge, state)) {
           useDialogStore.getState().showAlert({
             title: "Invalid Operation",
             message: "Adding this edge would create a cycle!",
@@ -180,43 +78,6 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           return state;
         }
 
-        // Helper function to recursively update downstream nodes and edges
-        const updateDownstreamNodes = (
-          nodeId: string,
-          emissionsDelta: number,
-          updatedNodesMap: Map<string, Node>,
-          updatedEdgesMap: Map<string, Edge>
-        ) => {
-          const node =
-            updatedNodesMap.get(nodeId) ||
-            state.nodes.find((n) => n.id === nodeId)!;
-          const updatedNode = {
-            ...node,
-            emissions: node.emissions + emissionsDelta,
-          };
-          updatedNodesMap.set(nodeId, updatedNode);
-
-          // Find all outgoing edges from this node
-          const outgoingEdges = state.edges.filter((e) => e.source === nodeId);
-          outgoingEdges.forEach((outEdge) => {
-            // FIXED FORMULA: node's weight / edge weight * node's emissions
-            const newEdgeEmissions =
-              (updatedNode.weight / outEdge.weight) * updatedNode.emissions;
-            const updatedEdge = {
-              ...outEdge,
-              emissions: newEdgeEmissions,
-            };
-            updatedEdgesMap.set(outEdge.id, updatedEdge);
-
-            updateDownstreamNodes(
-              outEdge.target,
-              newEdgeEmissions - outEdge.emissions,
-              updatedNodesMap,
-              updatedEdgesMap
-            );
-          });
-        };
-
         // Calculate initial edge emissions - FIXED FORMULA
         const edgeEmissions =
           (sourceNode.weight / edge.weight) * sourceNode.emissions;
@@ -231,7 +92,8 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           edge.target,
           edgeEmissions,
           updatedNodesMap,
-          updatedEdgesMap
+          updatedEdgesMap,
+          state
         );
 
         // Convert maps back to arrays and combine with unaffected nodes/edges
@@ -250,43 +112,6 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
       set((state) => {
         const edge = state.edges.find((e) => e.id === id)!;
 
-        // Helper function to recursively update downstream nodes and edges
-        const updateDownstreamNodes = (
-          nodeId: string,
-          emissionsDelta: number,
-          updatedNodesMap: Map<string, Node>,
-          updatedEdgesMap: Map<string, Edge>
-        ) => {
-          const node =
-            updatedNodesMap.get(nodeId) ||
-            state.nodes.find((n) => n.id === nodeId)!;
-          const updatedNode = {
-            ...node,
-            emissions: node.emissions + emissionsDelta,
-          };
-          updatedNodesMap.set(nodeId, updatedNode);
-
-          // Find all outgoing edges from this node
-          const outgoingEdges = state.edges.filter((e) => e.source === nodeId);
-          outgoingEdges.forEach((outEdge) => {
-            // FIXED FORMULA: node's weight / edge weight * node's emissions
-            const newEdgeEmissions =
-              (updatedNode.weight / outEdge.weight) * updatedNode.emissions;
-            const updatedEdge = {
-              ...outEdge,
-              emissions: newEdgeEmissions,
-            };
-            updatedEdgesMap.set(outEdge.id, updatedEdge);
-
-            updateDownstreamNodes(
-              outEdge.target,
-              newEdgeEmissions - outEdge.emissions,
-              updatedNodesMap,
-              updatedEdgesMap
-            );
-          });
-        };
-
         // Create maps to store updated nodes and edges
         const updatedNodesMap = new Map<string, Node>();
         const updatedEdgesMap = new Map<string, Edge>();
@@ -296,7 +121,8 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           edge.target,
           -edge.emissions,
           updatedNodesMap,
-          updatedEdgesMap
+          updatedEdgesMap,
+          state
         );
 
         // Convert maps back to arrays and combine with unaffected nodes/edges
@@ -361,44 +187,6 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           return state;
         }
 
-        // Helper function to recursively update downstream nodes and edges
-        const updateDownstreamNodes = (
-          nodeId: string,
-          emissionsDelta: number,
-          updatedNodesMap: Map<string, Node>,
-          updatedEdgesMap: Map<string, Edge>
-        ) => {
-          const node =
-            updatedNodesMap.get(nodeId) ||
-            state.nodes.find((n) => n.id === nodeId)!;
-          const updatedNode = {
-            ...node,
-            emissions: node.emissions + emissionsDelta,
-          };
-          updatedNodesMap.set(nodeId, updatedNode);
-
-          // Find all outgoing edges from this node
-          const outgoingEdges = state.edges.filter((e) => e.source === nodeId);
-          outgoingEdges.forEach((outEdge) => {
-            // FIXED FORMULA: node's weight / edge weight * node's emissions
-            const newEdgeEmissions =
-              (updatedNode.weight / outEdge.weight) * updatedNode.emissions;
-            const updatedEdge = {
-              ...outEdge,
-              emissions: newEdgeEmissions,
-            };
-            updatedEdgesMap.set(outEdge.id, updatedEdge);
-
-            // Continue updating downstream nodes
-            updateDownstreamNodes(
-              outEdge.target,
-              newEdgeEmissions - outEdge.emissions,
-              updatedNodesMap,
-              updatedEdgesMap
-            );
-          });
-        };
-
         // Create maps to store updated nodes and edges
         const updatedNodesMap = new Map<string, Node>();
         const updatedEdgesMap = new Map<string, Edge>();
@@ -425,7 +213,8 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
             outEdge.target,
             newEdgeEmissions - outEdge.emissions,
             updatedNodesMap,
-            updatedEdgesMap
+            updatedEdgesMap,
+            state
           );
         });
 
@@ -449,39 +238,7 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
         const edge = state.edges.find((e) => e.id === id)!;
         const sourceNode = state.nodes.find((n) => n.id === edge.source)!;
 
-        // Check for cycles using DFS starting from the target node
-        const hasCycle = (() => {
-          // If we're not changing the target, no need to check for cycles
-          if (!props.target || props.target === edge.target) return false;
-
-          const visited = new Set<string>();
-          const stack = new Set<string>();
-
-          const dfs = (nodeId: string): boolean => {
-            if (nodeId === edge.source) return true; // Would create a cycle
-            if (stack.has(nodeId)) return false;
-            if (visited.has(nodeId)) return false;
-
-            visited.add(nodeId);
-            stack.add(nodeId);
-
-            // Look at all outgoing edges except the current edge being updated
-            const outgoingEdges = state.edges.filter(
-              (e) => e.source === nodeId && e.id !== edge.id
-            );
-            for (const outEdge of outgoingEdges) {
-              if (dfs(outEdge.target)) return true;
-            }
-
-            stack.delete(nodeId);
-            return false;
-          };
-
-          // Start DFS from the new target node
-          return dfs(props.target);
-        })();
-
-        if (hasCycle) {
+        if (hasCycle(edge, state)) {
           useDialogStore.getState().showAlert({
             title: "Invalid Operation",
             message: "This change would create a cycle!",
@@ -507,43 +264,6 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           return state;
         }
 
-        // Helper function to recursively update downstream nodes and edges
-        const updateDownstreamNodes = (
-          nodeId: string,
-          emissionsDelta: number,
-          updatedNodesMap: Map<string, Node>,
-          updatedEdgesMap: Map<string, Edge>
-        ) => {
-          const node =
-            updatedNodesMap.get(nodeId) ||
-            state.nodes.find((n) => n.id === nodeId)!;
-          const updatedNode = {
-            ...node,
-            emissions: node.emissions + emissionsDelta,
-          };
-          updatedNodesMap.set(nodeId, updatedNode);
-
-          // Find all outgoing edges from this node
-          const outgoingEdges = state.edges.filter((e) => e.source === nodeId);
-          outgoingEdges.forEach((outEdge) => {
-            // FIXED FORMULA: node's weight / edge weight * node's emissions
-            const newEdgeEmissions =
-              (updatedNode.weight / outEdge.weight) * updatedNode.emissions;
-            const updatedEdge = {
-              ...outEdge,
-              emissions: newEdgeEmissions,
-            };
-            updatedEdgesMap.set(outEdge.id, updatedEdge);
-
-            updateDownstreamNodes(
-              outEdge.target,
-              newEdgeEmissions - outEdge.emissions,
-              updatedNodesMap,
-              updatedEdgesMap
-            );
-          });
-        };
-
         // Calculate new emissions - FIXED FORMULA
         const newEmissions =
           props.weight !== undefined
@@ -563,7 +283,8 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           edge.target,
           newEmissions - edge.emissions,
           updatedNodesMap,
-          updatedEdgesMap
+          updatedEdgesMap,
+          state
         );
 
         // Convert maps back to arrays and combine with unaffected nodes/edges
