@@ -1,5 +1,5 @@
-// client/src/stores/useGraphStore.ts
 import { create } from "zustand";
+import { useDialogStore } from "./useDialogStore";
 
 type Node = {
   id: string;
@@ -17,12 +17,15 @@ type Edge = {
   emissions: number;
 };
 
-type GraphStore = {
+export type GraphStore = {
+  id: string;
+  name: string;
   nodes: Node[];
   edges: Edge[];
   selectedNode: string | null;
   selectedEdge: string | null;
   actions: {
+    setGraphName: (name: string) => void;
     addNode: (node: Node) => void;
     updateNode: (id: string, props: Partial<Node>) => void;
     deleteNode: (id: string) => void;
@@ -31,16 +34,21 @@ type GraphStore = {
     deleteEdge: (id: string) => void;
     setSelectedNode: (id: string | null) => void;
     setSelectedEdge: (id: string | null) => void;
+    setGraphId: (id: string) => void;
+    setNodes: (nodes: Node[]) => void;
+    setEdges: (edges: Edge[]) => void;
   };
 };
 
 export const useGraphStore = create<GraphStore>((set, get) => ({
+  id: "",
+  name: "",
   nodes: [],
   edges: [],
   selectedNode: null,
   selectedEdge: null,
   actions: {
-    // Add a new node
+    setGraphName: (name) => set((state) => ({ ...state, name })),
     addNode: (node) => set((state) => ({ nodes: [...state.nodes, node] })),
 
     // Delete a node and its associated edges
@@ -150,7 +158,11 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
         })();
 
         if (hasCycle) {
-          alert("Adding this edge would create a cycle!");
+          useDialogStore.getState().showAlert({
+            title: "Invalid Operation",
+            message: "Adding this edge would create a cycle!",
+            type: "warning",
+          });
           return state;
         }
 
@@ -160,7 +172,11 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           .reduce((sum, e) => sum + e.weight, 0);
 
         if (totalOutboundWeight + edge.weight > sourceNode.weight) {
-          alert("Total outbound edge weights exceed the node's weight!");
+          useDialogStore.getState().showAlert({
+            title: "Invalid Operation",
+            message: "Total outbound edge weights exceed the node's weight!",
+            type: "warning",
+          });
           return state;
         }
 
@@ -322,9 +338,12 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           props.emissions !== undefined &&
           props.emissions < totalIncomingEmissions
         ) {
-          alert(
-            "Emissions cannot be set below the total incoming emissions from edges."
-          );
+          useDialogStore.getState().showAlert({
+            title: "Invalid Operation",
+            message:
+              "Emissions cannot be set below the total incoming emissions from edges.",
+            type: "warning",
+          });
           return state;
         }
 
@@ -334,7 +353,11 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           .reduce((sum, e) => sum + e.weight, 0);
 
         if (totalOutboundWeight > (props.weight ?? totalOutboundWeight)) {
-          alert("Total outbound edge weights exceed the node's weight!");
+          useDialogStore.getState().showAlert({
+            title: "Invalid Operation",
+            message: "Total outbound edge weights exceed the node's weight!",
+            type: "warning",
+          });
           return state;
         }
 
@@ -459,7 +482,11 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
         })();
 
         if (hasCycle) {
-          alert("This change would create a cycle!");
+          useDialogStore.getState().showAlert({
+            title: "Invalid Operation",
+            message: "This change would create a cycle!",
+            type: "warning",
+          });
           return state;
         }
 
@@ -472,7 +499,11 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
           totalOutboundWeightMinusCurrent + (props.weight ?? edge.weight) >
           sourceNode.weight
         ) {
-          alert("Total outbound edge weights exceed the node's weight!");
+          useDialogStore.getState().showAlert({
+            title: "Invalid Operation",
+            message: "Total outbound edge weights exceed the node's weight!",
+            type: "warning",
+          });
           return state;
         }
 
@@ -554,5 +585,14 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
 
     // Set the selected edge
     setSelectedEdge: (id) => set({ selectedEdge: id }),
+
+    // Set the graph ID
+    setGraphId: (id) => set((state) => ({ ...state, id })),
+
+    // Set nodes directly
+    setNodes: (nodes) => set({ nodes }),
+
+    // Set edges directly
+    setEdges: (edges) => set({ edges }),
   },
 }));

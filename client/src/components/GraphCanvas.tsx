@@ -1,11 +1,9 @@
-// client/src/components/GraphCanvas.tsx
-import React from "react";
+import { useState } from "react";
 import {
   ReactFlow,
   Controls,
   Background,
   MiniMap,
-  addEdge,
   ConnectionMode,
   useReactFlow,
 } from "@xyflow/react";
@@ -13,6 +11,7 @@ import "@xyflow/react/dist/style.css";
 import { useGraphStore } from "../stores/useGraphStore";
 import CustomNode from "./CustomNode";
 import CustomEdge from "./CustomEdge";
+import CyberPrompt from "./shared/CyberPrompt";
 
 const edgeTypes = {
   custom: CustomEdge,
@@ -25,19 +24,25 @@ const nodeTypes = {
 const GraphCanvas = () => {
   const { nodes, edges, actions } = useGraphStore();
   const { addEdges } = useReactFlow();
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [pendingConnection, setPendingConnection] = useState<any>(null);
 
   const onConnect = (params: any) => {
-    const edgeWeight = prompt("Enter edge weight:");
-    if (!edgeWeight) return;
+    setPendingConnection(params);
+    setPromptOpen(true);
+  };
 
-    const sourceNode = nodes.find((n) => n.id === params.source)!;
+  const handlePromptConfirm = (value: string) => {
+    if (!pendingConnection || !value) return;
+
+    const sourceNode = nodes.find((n) => n.id === pendingConnection.source)!;
     const emissions =
-      (sourceNode.weight / Number(edgeWeight)) * sourceNode.emissions;
+      (sourceNode.weight / Number(value)) * sourceNode.emissions;
 
     const newEdge = {
-      ...params,
-      id: `${params.source}-${params.target}`,
-      weight: Number(edgeWeight),
+      ...pendingConnection,
+      id: `${pendingConnection.source}-${pendingConnection.target}`,
+      weight: Number(value),
       emissions,
     };
     actions.addEdge(newEdge);
@@ -78,6 +83,7 @@ const GraphCanvas = () => {
           emissions: edge.emissions,
         },
       }))}
+      maxZoom={1.5}
       edgeTypes={edgeTypes}
       onNodeClick={onNodeClick}
       onEdgeClick={onEdgeClick}
@@ -95,8 +101,23 @@ const GraphCanvas = () => {
       fitView // Automatically fits the view to the graph
     >
       <Background />
-      <Controls /> {/* Adds zoom and pan controls */}
-      <MiniMap /> {/* Adds the minimap */}
+      <MiniMap
+        nodeColor="rgba(0, 255, 255, 0.5)"
+        maskColor="rgba(0, 255, 255, 0.1)"
+        style={{
+          backgroundColor: "rgba(16, 24, 39, 0.95)",
+          border: "1px solid rgba(0, 255, 255, 0.1)",
+        }}
+      />
+      <Controls style={{ color: "#162439" }} />
+      <CyberPrompt
+        open={promptOpen}
+        onClose={() => setPromptOpen(false)}
+        title="New Connection"
+        message="Enter edge weight"
+        onConfirm={handlePromptConfirm}
+        type="number"
+      />
     </ReactFlow>
   );
 };
