@@ -125,7 +125,7 @@ PORT=5000
 Emissions flow through edges is calculated using the formula:
 
 ```
-Edge Emissions = (Source Node Weight / Edge Weight) Source Node Emissions
+Edge Emissions = (Source Node Weight / Edge Weight) * Source Node Emissions
 ```
 
 ### Validation Rules
