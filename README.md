@@ -71,6 +71,19 @@ PORT=5000
    yarn dev
 ```
 
+4. OR start the production servers:
+
+```bash
+    # Start the backend server
+   cd server
+   yarn build
+   yarn start
+   # In a new terminal, start the frontend
+   cd client
+   yarn build
+   yarn preview
+```
+
 ## Application Structure
 
 ### Graph Components

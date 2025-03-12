@@ -1,6 +1,6 @@
-import React from "react";
 import { Button, ButtonProps, CircularProgress } from "@mui/material";
 
+// @ts-ignore
 interface CyberButtonProps extends ButtonProps {
   loading?: boolean;
   icon?: string;

@@ -6,7 +6,7 @@ import {
   listGraphs,
   updateGraph,
   deleteGraph,
-} from "@controllers/graphController";
+} from "../controllers/graphController";
 
 const router = express.Router();
 

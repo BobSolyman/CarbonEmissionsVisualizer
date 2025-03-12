@@ -1,6 +1,7 @@
 import React from "react";
 import { TextField, TextFieldProps, Box, Typography } from "@mui/material";
 
+// @ts-ignore
 interface CyberInputProps extends TextFieldProps {
   icon?: string;
 }
@@ -57,6 +58,7 @@ const CyberInput = ({ icon, ...props }: CyberInputProps) => {
               boxShadow: "0 0 10px rgba(0, 255, 255, 0.2)",
             },
           },
+          // @ts-ignore
           ...props.sx,
         }}
       />

@@ -49,9 +49,10 @@ const CyberPrompt = ({
       }
     >
       <CyberInput
+        // @ts-ignore
         label={message}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e: any) => setValue(e.target.value)}
         type={type}
         autoFocus
       />

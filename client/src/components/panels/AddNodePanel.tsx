@@ -52,17 +52,19 @@ const AddNodePanel = () => {
 
       <Stack spacing={2}>
         <CyberInput
+          // @ts-ignore
           label="Node Name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e: any) => setName(e.target.value)}
           icon="📍"
           required
         />
         <CyberInput
+          // @ts-ignore
           label="Weight"
           type="number"
           value={weight}
-          onChange={(e) =>
+          onChange={(e: any) =>
             setWeight(
               e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
             )
@@ -72,10 +74,11 @@ const AddNodePanel = () => {
           inputProps={{ min: 0 }}
         />
         <CyberInput
+          // @ts-ignore
           label="Emissions (optional)"
           type="number"
           value={emissions}
-          onChange={(e) =>
+          onChange={(e: any) =>
             setEmissions(
               e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
             )

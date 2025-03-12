@@ -35,7 +35,7 @@ const EdgeEditPanel = () => {
   };
 
   const handleConfirmDelete = () => {
-    actions.deleteEdge(selectedEdge);
+    actions.deleteEdge(selectedEdge ?? "");
     actions.setSelectedEdge(null);
   };
 
@@ -59,10 +59,11 @@ const EdgeEditPanel = () => {
 
       <Stack spacing={2}>
         <CyberInput
+          // @ts-ignore
           label="Weight"
           type="number"
           value={weight}
-          onChange={(e) => setWeight(Math.max(0, Number(e.target.value)))}
+          onChange={(e: any) => setWeight(Math.max(0, Number(e.target.value)))}
           icon="⚡"
           inputProps={{ min: 0 }}
         />

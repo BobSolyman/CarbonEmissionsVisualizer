@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Node, Edge } from "../stores/useGraphStore";
+import { Node, Edge } from "../stores/types";
 
 type GraphData = {
   _id: string;
