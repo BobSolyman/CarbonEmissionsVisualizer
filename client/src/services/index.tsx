@@ -9,7 +9,8 @@ type GraphData = {
 };
 
 const BASE_URL =
-  `${process.env.SERVER_API}/api/graph` || "http://localhost:5000/api/graph";
+  `${import.meta.env.VITE_SERVER_API}/api/graph` ||
+  "http://localhost:5000/api/graph";
 
 export const graphService = {
   async loadGraphs(): Promise<GraphData[]> {
