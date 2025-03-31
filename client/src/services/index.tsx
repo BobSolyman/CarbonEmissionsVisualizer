@@ -8,7 +8,8 @@ type GraphData = {
   edges: Edge[];
 };
 
-const BASE_URL = "http://localhost:5000/api/graph";
+const BASE_URL =
+  `${process.env.SERVER_API}/api/graph` || "http://localhost:5000/api/graph";
 
 export const graphService = {
   async loadGraphs(): Promise<GraphData[]> {
