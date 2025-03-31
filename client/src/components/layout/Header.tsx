@@ -48,7 +48,7 @@ const Header = () => {
             },
           }}
         >
-          CARBON<span style={{ color: "#00ffff" }}>GLANCE</span>
+          CARBON<span style={{ color: "#00ffff" }}>VISION</span>
         </Typography>
 
         <Typography
